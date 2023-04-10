@@ -1,0 +1,13 @@
+[package]
+name = "umi"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+umi_macros = {path = "./umi_macros"}
+umi_macros_proc = {path = "./umi_macros/umi_macros_proc"}
+
+serde = { version = "1.0", features = ["derive", "rc"]}
+serde_json = "1.0"
