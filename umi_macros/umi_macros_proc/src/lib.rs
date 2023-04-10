@@ -1071,7 +1071,9 @@ pub fn umi_enum_method(args: TokenStream, input: TokenStream) -> TokenStream {
 // imports
 #[proc_macro]
 pub fn setup_packages(_item: TokenStream) -> TokenStream {
-    "use umi::utils::*;
+    "use std::sync::atomic::*;
+    use std::sync::*;
+    use umi::utils::*;
     use umi::message_serialisation::*;".parse().unwrap()
 }
 

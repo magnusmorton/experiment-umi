@@ -1,5 +1,3 @@
-use std::sync::atomic::{AtomicBool};
-use std::sync::{Arc};
 use umi::{remote};
 use applications::umi_demo::students::{StudentRecord};
 use umi_macros_proc::{setup_packages};
