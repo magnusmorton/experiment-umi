@@ -1079,12 +1079,15 @@ pub fn setup_packages(_item: TokenStream) -> TokenStream {
 
 #[proc_macro]
 pub fn setup_registry(_item: TokenStream) -> TokenStream {
-    "use umi::registry::*;
+    "use std::any::*;
+    use umi::registry::*;
     use umi::proxy_lib::*;".parse().unwrap()
 }
 
 #[proc_macro]
 pub fn setup_proc_macros(_item: TokenStream) -> TokenStream {
-    "use umi_macros::*;
+    "use serde::*;
+    use std::net::*;
+    use umi_macros::*;
     use umi_macros_proc::*;".parse().unwrap()
 }

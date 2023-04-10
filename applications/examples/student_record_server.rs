@@ -1,4 +1,3 @@
-use std::any::{Any};
 use std::sync::{Arc, Mutex};
 use umi::endpoint::{UMIEndpoint, ResourceTable};
 use umi::registry::{RegistryTable};

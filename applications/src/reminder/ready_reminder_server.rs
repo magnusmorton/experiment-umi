@@ -1,6 +1,5 @@
 use std::time::SystemTime;
 use std::collections::BinaryHeap;
-use std::sync::atomic::{Ordering};
 use serde::{Serialize, Deserialize};
 
 #[derive(Eq, PartialEq, Clone, Debug, Serialize, Deserialize)]
