@@ -18,6 +18,3 @@ Cargo.lock
 
 **/target
 
-/applications/examples/ready_reminder_umi_server.rs
-/applications/examples/ready_reminder_umi_client.rs
-/applications/src/reminder/ready_reminder_server_multi.rs
