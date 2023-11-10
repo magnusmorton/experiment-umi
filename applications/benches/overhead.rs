@@ -1,6 +1,6 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use std::hint::black_box;
 use std::sync::{Arc, Mutex};
-use std::time::{SystemTime, Duration};
+use std::time::{Instant, Duration, SystemTime};
 use std::thread;
 use umi::endpoint::{UMIEndpoint, ResourceTable};
 use umi::{register, remote};
@@ -10,14 +10,24 @@ setup_packages!();
 setup_registry!();
 setup_proc_macros!();
 
-fn fib(n: u64) -> u64 {
-    match n {
-        0 => 1,
-        1 => 1,
-        n => fib(n-1) + fib(n-2),
-    }
-}
+const SAMPLES:u64 = 1000;
+const ROUNDS:u64 = 100;
+const warmup:u64 = 10;
 
+
+fn bench<F>(name: &str, mut f: F) where
+    F: FnMut() -> () {
+    for i in 0..warmup {
+        f();
+    }
+    let then = Instant::now();
+    for i in 0..SAMPLES {
+        f();
+    }
+
+    let duration = then.elapsed();
+    println!("{},{},{}", name, duration.as_millis(),SAMPLES);
+}
 fn server_setup() -> (UMIEndpoint, RegistryTable, Arc<Mutex<ResourceTable>>){
     let mut table = RegistryTable::new();
     register!(table, ReadyReminderServerNew, ReadyReminderServer::new, fn() -> ReadyReminderServer, (ReadyReminderServer, ResultOp::Owned));
@@ -29,43 +39,45 @@ fn server_setup() -> (UMIEndpoint, RegistryTable, Arc<Mutex<ResourceTable>>){
     return (server, table, vtable)
 }
 
-fn fib_benchmark(c: &mut Criterion) {
-    c.bench_function("fib 20", |b| b.iter(|| fib(black_box(20))));
+fn server_benchmark() {
+    bench("server setup", ||  {
+        let _ = server_setup();
+    });
 }
 
-fn server_benchmark(c: &mut Criterion) {
-    c.bench_function("server setup", |b| b.iter(|| black_box(server_setup())));
-}
-
-fn client_benchmark(c: &mut Criterion) {
-    let mut group = c.benchmark_group("client group");
-    group.measurement_time(Duration::from_millis(100));
+fn client_benchmark() {
     let (mut server, table, vtable) = server_setup();
     let t = thread::spawn(move || {
         server.start(table, vtable);
     });
     let mut r = remote!("127.0.0.1:3335", ReadyReminderServer::new, ReadyReminderServer);
-    group.bench_function("client submit", |b| b.iter(|| r.submit_event("Goodbye World!".to_string(), SystemTime::now() + Duration::new(3, 0))));
+    bench("client submit",|| r.submit_event("Goodbye World!".to_string(), SystemTime::now() + Duration::new(3, 0)));
+    //r.submit_event("Goodbye World!".to_string(), SystemTime::now() + Duration::new(3, 0));
     thread::sleep(Duration::new(4, 0));
-    //r.extract_event();
-    //group.bench_function("client extract", |b| b.iter(|| r.extract_event()));
-    group.finish();
-}
-
-fn extract_benchmark(c: &mut Criterion) {
-    let mut group = c.benchmark_group("client group");
-    group.measurement_time(Duration::from_millis(100));
-    let (mut server, table, vtable) = server_setup();
-    let t = thread::spawn(move || {
-        server.start(table, vtable);
+    // r.extract_event();
+    bench("client extract",|| {
+        r.extract_event();
     });
-    let mut r = remote!("127.0.0.1:3335", ReadyReminderServer::new, ReadyReminderServer);
-    // group.bench_function("client submit", |b| b.iter(|| r.submit_event("Goodbye World!".to_string(), SystemTime::now() + Duration::new(3, 0))));
-    // thread::sleep(Duration::new(4, 0));
-    //r.extract_event();
-    group.bench_function("client extract", |b| b.iter(|| r.extract_event()));
-    group.finish();
+    thread::sleep(Duration::new(2,0));
 }
 
-criterion_group!(benches,  extract_benchmark, server_benchmark);
-criterion_main!(benches);
+// fn extract_benchmark(c: &mut Criterion) {
+//     let mut group = c.benchmark_group("client group");
+//     group.measurement_time(Duration::from_millis(100));
+//     let (mut server, table, vtable) = server_setup();
+//     let t = thread::spawn(move || {
+//         server.start(table, vtable);
+//     });
+//     let mut r = remote!("127.0.0.1:3335", ReadyReminderServer::new, ReadyReminderServer);
+//     // group.bench_function("client submit", |b| b.iter(|| r.submit_event("Goodbye World!".to_string(), SystemTime::now() + Duration::new(3, 0))));
+//     // thread::sleep(Duration::new(4, 0));
+//     //r.extract_event();
+//     group.bench_function("client extract", |b| b.iter(|| r.extract_event()));
+//     group.finish();
+// }
+
+fn main() {
+    println!("benchmark,total,samples");
+    //server_benchmark();
+    client_benchmark();
+}
